@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package verification;
+
+service VerificationService {
+    rpc SayHello (VerificationRequest) returns (VerificationResponse);
+}
+
+message VerificationRequest {
+    string order_data = 1;
+}
+
+message VerificationResponse {
+    string response = 1;
+}
