@@ -10,6 +10,9 @@ sys.path.insert(0, fraud_detection_grpc_path)
 import fraud_detection_pb2 as fraud_detection
 import fraud_detection_pb2_grpc as fraud_detection_grpc
 
+import suggestion_pb2 as suggestion
+import suggestion_pb2_grpc as suggestion_grpc
+
 import grpc
 
 def greet(name='you'):
@@ -21,6 +24,8 @@ def greet(name='you'):
         response = stub.SayHello(fraud_detection.HelloRequest(name=name))
     return response.greeting
 
+def suggest()
+
 # Import Flask.
 # Flask is a web framework for Python.
 # It allows you to build a web application quickly.
@@ -28,6 +33,7 @@ def greet(name='you'):
 from flask import Flask, request
 from flask_cors import CORS
 import json
+import threading
 
 # Create a simple Flask app.
 app = Flask(__name__)

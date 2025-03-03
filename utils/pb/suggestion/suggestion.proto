@@ -1,0 +1,16 @@
+
+syntax = "proto3";
+
+package suggestion;
+
+service Suggest {
+    rpc Suggest (HelloRequest) returns (HelloResponse);
+}
+
+message SuggestRequest {
+    string name = 1;
+}
+
+message SuggestResponse {
+    string greeting = 1;
+}
