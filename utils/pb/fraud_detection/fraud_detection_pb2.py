@@ -14,17 +14,21 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x66raud_detection.proto\x12\x05hello\"\x1c\n\x0cHelloRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"!\n\rHelloResponse\x12\x10\n\x08greeting\x18\x01 \x01(\t2E\n\x0cHelloService\x12\x35\n\x08SayHello\x12\x13.hello.HelloRequest\x1a\x14.hello.HelloResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x66raud_detection.proto\x12\x0f\x66raud_detection\")\n\x08UserData\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontact\x18\x02 \x01(\t\"A\n\nCreditCard\x12\x0e\n\x06number\x18\x01 \x01(\t\x12\x16\n\x0e\x65xpirationDate\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t\"`\n\x0c\x46raudRequest\x12\'\n\x04user\x18\x01 \x01(\x0b\x32\x19.fraud_detection.UserData\x12\'\n\x02\x63\x63\x18\x02 \x01(\x0b\x32\x1b.fraud_detection.CreditCard\"\x1e\n\rFraudResponse\x12\r\n\x05\x66raud\x18\x01 \x01(\x08\x32_\n\x0e\x46raudDetection\x12M\n\x0cLookforFraud\x12\x1d.fraud_detection.FraudRequest\x1a\x1e.fraud_detection.FraudResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'fraud_detection_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_HELLOREQUEST']._serialized_start=32
-  _globals['_HELLOREQUEST']._serialized_end=60
-  _globals['_HELLORESPONSE']._serialized_start=62
-  _globals['_HELLORESPONSE']._serialized_end=95
-  _globals['_HELLOSERVICE']._serialized_start=97
-  _globals['_HELLOSERVICE']._serialized_end=166
+  _globals['_USERDATA']._serialized_start=42
+  _globals['_USERDATA']._serialized_end=83
+  _globals['_CREDITCARD']._serialized_start=85
+  _globals['_CREDITCARD']._serialized_end=150
+  _globals['_FRAUDREQUEST']._serialized_start=152
+  _globals['_FRAUDREQUEST']._serialized_end=248
+  _globals['_FRAUDRESPONSE']._serialized_start=250
+  _globals['_FRAUDRESPONSE']._serialized_end=280
+  _globals['_FRAUDDETECTION']._serialized_start=282
+  _globals['_FRAUDDETECTION']._serialized_end=377
 # @@protoc_insertion_point(module_scope)
