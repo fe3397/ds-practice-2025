@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package suggestion_service;
+
+service Suggestion {
+    rpc MakeSuggestion (SuggestionRequest) returns (SuggestionResponse);
+}
+
+message SuggestionRequest {
+    string book_1 = 1;
+    string book_2 = 2;
+}
+
+message SuggestionResponse {
+    string sug_book_1 = 1;
+    string sug_book_2 = 2;
+}
