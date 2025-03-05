@@ -2,14 +2,47 @@ syntax = "proto3";
 
 package verification;
 
+
 service VerificationService {
-    rpc SayHello (VerificationRequest) returns (VerificationResponse);
+    rpc VerifyTransaction (VerificationRequest) returns (VerificationResponse);
 }
 
 message VerificationRequest {
-    string order_data = 1;
+    OrderData order_data = 1;
 }
 
 message VerificationResponse {
     string response = 1;
+}
+
+message OrderData {
+  string id = 1;
+  UserData userdata = 2;
+  CardData carddata = 3;
+  UserAdress useradress = 4;
+  repeated Book books = 5;
+}
+
+message UserData {
+  string name = 1;
+  string contact = 2;
+}
+
+message CardData {
+  string card_number = 1;
+  string expiration = 2;
+  string cvv = 3;
+}
+
+message UserAdress{
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string zip = 4;
+  string country = 5;
+}
+
+message Book{
+  string name = 1;
+  int32 amount = 2;
 }
