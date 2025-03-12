@@ -5,18 +5,6 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class VerificationRequest(_message.Message):
-    __slots__ = ("order_data",)
-    ORDER_DATA_FIELD_NUMBER: _ClassVar[int]
-    order_data: OrderData
-    def __init__(self, order_data: _Optional[_Union[OrderData, _Mapping]] = ...) -> None: ...
-
-class VerificationResponse(_message.Message):
-    __slots__ = ("response",)
-    RESPONSE_FIELD_NUMBER: _ClassVar[int]
-    response: str
-    def __init__(self, response: _Optional[str] = ...) -> None: ...
-
 class OrderData(_message.Message):
     __slots__ = ("id", "userdata", "carddata", "useradress", "books")
     ID_FIELD_NUMBER: _ClassVar[int]
