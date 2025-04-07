@@ -44,3 +44,10 @@ frontend service:
 - It's a simple static HTML page, you can open `frontend/src/index.html` in your browser.
 
 And then run each service individually.
+
+Diagrams
+
+![system](https://github.com/user-attachments/assets/65655245-c322-4c90-9c49-989305d24f75)
+
+
+![architecture](https://github.com/user-attachments/assets/57414e7c-ee1a-473a-9c54-cb96f2fd21ac)
