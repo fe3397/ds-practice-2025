@@ -1,5 +1,5 @@
-from common import common_pb2 as _common_pb2
-from order_data import order_pb2 as _order_pb2
+import common_pb2 as _common_pb2
+import order_pb2 as _order_pb2
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union

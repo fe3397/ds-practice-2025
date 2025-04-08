@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package verification;
 
-import "common/common.proto";
-import "order_data/order.proto";
+import "common.proto";
+import "order.proto";
 
 
 service VerificationService {
