@@ -30,6 +30,21 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def init_verification(order_data):
+    with grpc.insecure_channel('transaction_verification:50052'):
+        stub = transaction_verification_grpc.VerificationServiceStub(channel)
+
+
+
+def init_fraud_detection(order_data):
+    with grpc.insecure_channel('transaction_verification:50052'):
+        stub = fraud_detection_grpc.FraudDetectionStub(channel)
+
+def init_suggestion(order_data):
+    with grpc.insecure_channel('suggestion_service:50053') as channel:
+        stub = suggestion_service_grpc.SuggestionStub(channel)
+
+
 
 def suggest(book1, book2):
   # Establish a connection with the fraud-detection gRPC service.
