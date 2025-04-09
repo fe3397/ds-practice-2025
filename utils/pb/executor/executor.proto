@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package executor;
+
+import "order_data/order.proto";
+
+service OrderExecutor {
+    rpc Dequeue (DequeueRequest) returns (order.OrderData);
+
+    rpc ElectLeader (LeaderElectionRequest) returns (LeaderElectionResponse);
+
+    rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+message DequeueRequest {}
+
+message LeaderElectionRequest {
+    string instance_id = 1;
+}
+
+message LeaderElectionResponse {
+    string leader_id = 1;
+    bool is_leader = 2;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+    bool is_alive = 1;
+}

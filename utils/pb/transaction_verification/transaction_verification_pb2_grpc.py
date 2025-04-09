@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import transaction_verification_pb2 as transaction__verification__pb2
+from transaction_verification import transaction_verification_pb2 as transaction__verification_dot_transaction__verification__pb2
 
 
 class VerificationServiceStub(object):
@@ -16,8 +16,8 @@ class VerificationServiceStub(object):
         """
         self.VerifyTransaction = channel.unary_unary(
                 '/verification.VerificationService/VerifyTransaction',
-                request_serializer=transaction__verification__pb2.VerificationRequest.SerializeToString,
-                response_deserializer=transaction__verification__pb2.VerificationResponse.FromString,
+                request_serializer=transaction__verification_dot_transaction__verification__pb2.VerificationRequest.SerializeToString,
+                response_deserializer=transaction__verification_dot_transaction__verification__pb2.VerificationResponse.FromString,
                 )
 
 
@@ -35,8 +35,8 @@ def add_VerificationServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'VerifyTransaction': grpc.unary_unary_rpc_method_handler(
                     servicer.VerifyTransaction,
-                    request_deserializer=transaction__verification__pb2.VerificationRequest.FromString,
-                    response_serializer=transaction__verification__pb2.VerificationResponse.SerializeToString,
+                    request_deserializer=transaction__verification_dot_transaction__verification__pb2.VerificationRequest.FromString,
+                    response_serializer=transaction__verification_dot_transaction__verification__pb2.VerificationResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -60,7 +60,7 @@ class VerificationService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/verification.VerificationService/VerifyTransaction',
-            transaction__verification__pb2.VerificationRequest.SerializeToString,
-            transaction__verification__pb2.VerificationResponse.FromString,
+            transaction__verification_dot_transaction__verification__pb2.VerificationRequest.SerializeToString,
+            transaction__verification_dot_transaction__verification__pb2.VerificationResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

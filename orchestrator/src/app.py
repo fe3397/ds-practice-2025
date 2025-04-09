@@ -7,6 +7,11 @@ from concurrent import futures
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 
+order_queue_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_data'))
+sys.path.insert(0, order_queue_grpc_path)
+import order_pb2 as order_queue
+import order_pb2_grpc as order_queue_grpc
+
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestion_service'))
 sys.path.insert(0, fraud_detection_grpc_path)
 import suggestion_service_pb2 as suggestion_service
@@ -30,6 +35,20 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def enqueue_order(order_data):
+    with grpc.insecure_channel('order_queue:50054') as channel:
+        print("channel found")
+        stub = order_queue_grpc.OrderQueueStub(channel)
+        print("stub made")
+        print("Order Data:", order_data)
+        response = stub.Enqueue(order_queue.OrderData(id=order_data.id, userdata=order_data.userdata, carddata=order_data.carddata, useradress=order_data.useradress, books=order_data.books))
+        return response
+
+def dequeue_order():
+    with grpc.insecure_channel('order_queue:50054') as channel:
+        stub = order_queue_grpc.OrderQueueStub(channel)
+        response = stub.Dequeue(order_queue.DequeueRequest())
+        return response
 
 def suggest(book1, book2):
   # Establish a connection with the fraud-detection gRPC service.
@@ -120,27 +139,39 @@ def checkout():
     suggestions = suggest(request_data.get('items')[0]['name'], request_data.get('items')[1]['name'])
     # Check for fraud
     is_fraud = checkFraud(request_data.get('user'), request_data.get('creditCard'))
+    order_data = order(request_data)
+    verification_response = verify(order_data)
+    print("Verification Response:", verification_response)
+    print("Fraud Detection Response:", is_fraud)
+    print("Enqueing Order:", order_data.id)
 
-    if is_fraud:
-        order_status_response = {
-            'orderId': '12345',
-            'status': 'Your transaction was flagged as potentially fraudulent. Please contact support.',
-            'suggestedBooks': [
-                {'bookId': '123', 'title': 'The Best Book', 'author': 'Author 1'},
-                {'bookId': '456', 'title': 'The Second Best Book', 'author': 'Author 2'}
-            ]
-        }
+    if verification_response == 'OK' and not is_fraud and suggestions.sug_book_1 != '' and suggestions.sug_book_2 != '':
+        enqueue_response = enqueue_order(order_data)
+        print("Enqueue Response:", enqueue_response)
+
+        if enqueue_response.success:
+            order_status_response = {
+                'orderId': order(request_data).id,
+                'status': 'Order Approved',
+                'suggestedBooks': [
+                    {'bookId': '123', 'title': suggestions.sug_book_1, 'author': 'Author 1'},
+                    {'bookId': '456', 'title': suggestions.sug_book_2, 'author': 'Author 2'}
+                ]
+            }
+        else:
+            order_status_response = {
+                'orderId': 'dummy',#order(request_data).id,
+                'status': 'Order Failed',
+                'suggestedBooks': []
+            }
     else:
-    # Dummy response following the provided YAML specification for the bookstore
-    order_status_response = {
-        'orderId': '12345',
-        'status': 'Order Approved',
-        'suggestedBooks': [
-            {'bookId': '123', 'title': suggestions.sug_book_1, 'author': 'Author 1'},
-            {'bookId': '456', 'title': suggestions.sug_book_2, 'author': 'Author 2'}
-        ]
-    }
-    verification_response = verify(order(request_data))
+        order_status_response = {
+            'orderId': 'dummy',#order(request_data).id,
+            'status': 'Order Failed',
+            'suggestedBooks': []
+        }
+    print("Order Status Response:", order_status_response)
+    
     return order_status_response
 
 

@@ -2,3 +2,98 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+import order_pb2 as order__pb2
+
+
+class OrderQueueStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Enqueue = channel.unary_unary(
+                '/order.OrderQueue/Enqueue',
+                request_serializer=order__pb2.OrderData.SerializeToString,
+                response_deserializer=order__pb2.EnqueueResponse.FromString,
+                )
+        self.Dequeue = channel.unary_unary(
+                '/order.OrderQueue/Dequeue',
+                request_serializer=order__pb2.DequeueRequest.SerializeToString,
+                response_deserializer=order__pb2.OrderData.FromString,
+                )
+
+
+class OrderQueueServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def Enqueue(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Dequeue(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_OrderQueueServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'Enqueue': grpc.unary_unary_rpc_method_handler(
+                    servicer.Enqueue,
+                    request_deserializer=order__pb2.OrderData.FromString,
+                    response_serializer=order__pb2.EnqueueResponse.SerializeToString,
+            ),
+            'Dequeue': grpc.unary_unary_rpc_method_handler(
+                    servicer.Dequeue,
+                    request_deserializer=order__pb2.DequeueRequest.FromString,
+                    response_serializer=order__pb2.OrderData.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'order.OrderQueue', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+
+
+ # This class is part of an EXPERIMENTAL API.
+class OrderQueue(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def Enqueue(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/order.OrderQueue/Enqueue',
+            order__pb2.OrderData.SerializeToString,
+            order__pb2.EnqueueResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Dequeue(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/order.OrderQueue/Dequeue',
+            order__pb2.DequeueRequest.SerializeToString,
+            order__pb2.OrderData.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

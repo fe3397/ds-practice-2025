@@ -38,7 +38,7 @@ class TransactionVerificationService(transaction_verification_grpc.VerificationS
             logging.info("verification successful")
         else:
             response.response = "ERROR"
-            loggin.error("verification unsuccessful")
+            logging.error("verification unsuccessful")
         return response
 
 def serve():
