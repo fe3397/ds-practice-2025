@@ -14,13 +14,25 @@ sys.path.insert(0, fraud_detection_grpc_path)
 import fraud_detection_pb2 as fraud_detection
 import fraud_detection_pb2_grpc as fraud_detection_grpc
 
+common_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/common'))
+order_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_data'))
+
+sys.path.insert(1, common_grpc_path)
+sys.path.insert(2, order_grpc_path)
+
+import order_pb2 as order
+import order_pb2_grpc as order_grpc
+
+import common_pb2 as common
+import common_pb2_grpc as common_grpc
+
 import grpc
 from concurrent import futures
 
 # Create a class to define the server functions, derived from
 # fraud_detection_pb2_grpc.FraudDetectionServiceServicer
 class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
-    def __init__(self):
+    def __init__(self, svc_idx=1, total_svcs=3):
         self.userDB = {
             'John Doe': {
                 'contact': 'john.doe@example.com',
@@ -31,29 +43,59 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
                 }
             }
         }
+        self.svc_idx=1
+        self.total_svcs=total_svcs
+        self.orders = {}
+    def InitOrder(self, request: order.OrderData, context):
+        self.orders[request.id] = {"data": data, "vc": [0]*self.total_svcs}
+
+        
+
+    def merge_and_increment(self, local_vc, incoming_vc):
+        for i in range(self.total_svcs):
+            local_vc[i] = max(local_vc[i], incoming_vc[i])
+        local_vc[self.svc_idx] += 1
+
     # Create an RPC function to check fraud
-    def LookforFraud(self, request, context):
-        user_data = request.user
-        cc_data = request.cc
+    def LookforFraud(order_id):
+        logging.info("starting fraud detection")
+
+        cache = self.orders.get(order_id)
+
+        if not cache:
+            context.abort(grpc.StatusCode.NOT_FOUND, "Order not found")
+
+        order = cache["data"]
+        vector = cache["vc"]
+        user_data = order.userdata 
+        cc_data = order.carddata 
         # Create a FraudResponse object
         response = fraud_detection.FraudResponse()
 
-        # Check if the user is in the userDB
-        if user_data.name in self.userDB:
-            print(f"User {user_data.name} found in userDB, comparing credit card data...")
-            # Check if the credit card is in the userDB
+        def check_card_fraud():
+            self.merge_and_increment(vector, vector)
+            logging.info(f"[a] Vector clock after check_user_data_fraud: {vector}")
             if cc_data.number in self.userDB[user_data.name]['cc']['number'] and cc_data.expirationDate in self.userDB[user_data.name]['cc']['expirationDate'] and cc_data.cvv in self.userDB[user_data.name]['cc']['cvv']:
-                # Return a fraud response
-                response.fraud = False
-                print("No fraud detected")
+                    # Return a fraud response
+                    response.fraud = False
+                    print("No fraud detected")
+                else:
+                    # Return a fraud response
+                    response.fraud = True
+                    print("Possible fraud detected")
+
+        def check_user_data_fraud():
+            self.merge_and_increment(vector, vector)
+            logging.info(f"[a] Vector clock after check_user_data_fraud: {vector}")
+
+            # Check if the user is in the userDB
+            if user_data.name in self.userDB:
+                print(f"User {user_data.name} found in userDB, comparing credit card data...")
+                response.fraud = False 
             else:
-                # Return a fraud response
-                response.fraud = True
-                print("Possible fraud detected")
-        else:
-            # Ask Chatgpt if the user is a fraud
-            print(f"User not found in userDB, screening with AI...")
-            answer = "NO" # Default to NO for now
+                # Ask Chatgpt if the user is a fraud
+                print(f"User not found in userDB, screening with AI...")
+                answer = "NO" # Default to NO for now
             
             #prompt = f"Does this transaction look like fraud? Respond with only 'YES' or 'NO'.\n\nTransaction Data:\n{user_data, cc_data}"
             #response = openai.ChatCompletion.create(
@@ -80,6 +122,7 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
                     }
                 }
         # Return the response object
+        response.vector_clock = 
         return response
 
 def serve():
