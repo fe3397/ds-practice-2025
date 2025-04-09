@@ -10,21 +10,55 @@ sys.path.insert(0, suggestion_service_grpc_path)
 import suggestion_service_pb2 as suggestion_service
 import suggestion_service_pb2_grpc as suggestion_service_grpc
 
+sys.path.insert(1, common_grpc_path)
+sys.path.insert(2, order_grpc_path)
+
+import order_pb2 as order
+import order_pb2_grpc as order_grpc
+
+import common_pb2 as common
+import common_pb2_grpc as common_grpc
+
 import grpc
 from concurrent import futures
 
 # Create a class to define the server functions, derived from
 # fraud_detection_pb2_grpc.HelloServiceServicer
 class SuggestionService(suggestion_service_grpc.SuggestionServicer):
-    def __init__(self):
+    def __init__(self, svc_idx=2, total_svcs=3):
         self.suggestions = {
             "1": ["The Great Gatsby", "To Kill a Mockingbird", "1984"],
             "2": ["The Catcher in the Rye", "The Grapes of Wrath"],
         }
-    # Create an RPC function to say hello
-    def MakeSuggestion(self, request, context):
-        book_1 = request.book_1
-        book_2 = request.book_2
+        self.svc_idx = svc_idx
+        self.total_svcs = total_svcs
+        self.orders = {}
+    
+    def InitOrder(self, request: order.OrderData, context)
+        self.orders[request.id] = {"data": data, "vc": [0]*self.total_svcs}
+
+    def merge_and_increment(self, local_vc, incoming_vc):
+            for i in range(self.total_svcs):
+                local_vc[i] = max(local_vc[i], incoming_vc[i])
+            local_vc[self.svc_idx] += 1
+
+    def MakeSuggestion(order_id):
+        logging.info("starting book suggestion")
+
+        cache = self.orders.get(order_id)
+
+        if not cache:
+            context.abort(grpc.StatusCode.NOT_FOUND, "Order not found")
+
+        order = cache["data"]
+        vector = cache["vc"]
+
+        book_1 = order.books.book_1
+        book_2 = order.books.book_2
+
+        self.merge_and_increment(vector, vector)
+        logging.info(f"[a] Vector clock after MakeSuggestion: {vector}")
+
         print("Received request for", book_1, "and", book_2, "making suggestions.")
         # Create a SuggestionResponse object
         response = suggestion_service.SuggestionResponse()
@@ -51,7 +85,7 @@ class SuggestionService(suggestion_service_grpc.SuggestionServicer):
         #response.sug_book_1 = suggestions[0]
         #response.sug_book_2 = suggestions[1]
         #print("Suggested books:", suggestions)
-        
+        response.vector_clock = common_pb2.VectorClock(vector_clock= vector)
         return response
 
 def serve():

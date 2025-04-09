@@ -2,16 +2,28 @@ syntax = "proto3";
 
 package suggestion_service;
 
+import "common.proto";
+import "order.proto";
+
 service Suggestion {
     rpc MakeSuggestion (SuggestionRequest) returns (SuggestionResponse);
+    rpc InitOrder (InitSuggestionRequest) returns (InitSuggestionResponse);
 }
 
 message SuggestionRequest {
-    string book_1 = 1;
-    string book_2 = 2;
+    string order_id = 1;
 }
 
 message SuggestionResponse {
     string sug_book_1 = 1;
     string sug_book_2 = 2;
+    common.VectorClock vector_clock = 3;
+}
+
+message InitSuggestionRequest {
+    order.OrderData order_data = 1; 
+}
+
+message InitSuggestionResponse {
+    string status = 1;
 }
