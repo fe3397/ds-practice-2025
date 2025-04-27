@@ -7,17 +7,17 @@ from concurrent import futures
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 
-fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestion_service'))
+fraud_detection_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/suggestion_service'))
 sys.path.insert(0, fraud_detection_grpc_path)
 import suggestion_service_pb2 as suggestion_service
 import suggestion_service_pb2_grpc as suggestion_service_grpc
 
-fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
+fraud_detection_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/fraud_detection'))
 sys.path.insert(1, fraud_detection_grpc_path)
 import fraud_detection_pb2 as fraud_detection
 import fraud_detection_pb2_grpc as fraud_detection_grpc
 
-transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
+transaction_verification_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/transaction_verification'))
 sys.path.insert(2, transaction_verification_grpc_path)
 import transaction_verification_pb2 as transaction_verification
 import transaction_verification_pb2_grpc as transaction_verification_grpc
@@ -147,14 +147,14 @@ def checkout():
         }
     else:
     # Dummy response following the provided YAML specification for the bookstore
-    order_status_response = {
-        'orderId': '12345',
-        'status': 'Order Approved',
-        'suggestedBooks': [
-            {'bookId': '123', 'title': suggestions.sug_book_1, 'author': 'Author 1'},
-            {'bookId': '456', 'title': suggestions.sug_book_2, 'author': 'Author 2'}
-        ]
-    }
+        order_status_response = {
+            'orderId': '12345',
+            'status': 'Order Approved',
+            'suggestedBooks': [
+                {'bookId': '123', 'title': suggestions.sug_book_1, 'author': 'Author 1'},
+                {'bookId': '456', 'title': suggestions.sug_book_2, 'author': 'Author 2'}
+            ]
+        }
     verification_response = verify(order(request_data))
     return order_status_response
 

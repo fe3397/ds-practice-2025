@@ -5,22 +5,25 @@ import os
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
 
-common_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/common'))
-order_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_data'))
+common_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/common'))
+sys.path.insert(0, common_grpc_path)
 
-sys.path.insert(0, transaction_verification_grpc_path)
-sys.path.insert(1, common_grpc_path)
-sys.path.insert(2, order_grpc_path)
-import transaction_verification_pb2 as transaction_verification
-import transaction_verification_pb2_grpc as transaction_verification_grpc
+order_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/order_data'))
+sys.path.insert(1, order_grpc_path)
+
+transaction_verification_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/transaction_verification'))
+sys.path.insert(2, transaction_verification_grpc_path)
+
 
 import order_pb2 as order
 import order_pb2_grpc as order_grpc
 
 import common_pb2 as common
 import common_pb2_grpc as common_grpc
+
+import transaction_verification_pb2 as transaction_verification
+import transaction_verification_pb2_grpc as transaction_verification_grpc
 
 import grpc
 from concurrent import futures

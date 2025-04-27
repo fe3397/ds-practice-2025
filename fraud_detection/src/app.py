@@ -1,3 +1,4 @@
+import logging
 import sys
 import os
 
@@ -9,22 +10,23 @@ import os
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
-sys.path.insert(0, fraud_detection_grpc_path)
-import fraud_detection_pb2 as fraud_detection
-import fraud_detection_pb2_grpc as fraud_detection_grpc
+common_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/common'))
+sys.path.insert(0, common_grpc_path)
 
-common_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/common'))
-order_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_data'))
+order_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/order_data'))
+sys.path.insert(1, order_grpc_path)
 
-sys.path.insert(1, common_grpc_path)
-sys.path.insert(2, order_grpc_path)
+fraud_detection_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/fraud_detection'))
+sys.path.insert(2, fraud_detection_grpc_path)
+
+import common_pb2 as common
+import common_pb2_grpc as common_grpc
 
 import order_pb2 as order
 import order_pb2_grpc as order_grpc
 
-import common_pb2 as common
-import common_pb2_grpc as common_grpc
+import fraud_detection_pb2 as fraud_detection
+import fraud_detection_pb2_grpc as fraud_detection_grpc
 
 import grpc
 from concurrent import futures
@@ -79,10 +81,10 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
                     # Return a fraud response
                     response.fraud = False
                     print("No fraud detected")
-                else:
-                    # Return a fraud response
-                    response.fraud = True
-                    print("Possible fraud detected")
+            else:
+                # Return a fraud response
+                response.fraud = True
+                print("Possible fraud detected")
 
         def check_user_data_fraud():
             self.merge_and_increment(vector, vector)
@@ -122,7 +124,7 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
                     }
                 }
         # Return the response object
-        response.vector_clock = 
+        response.vector_clock = vector 
         return response
 
 def serve():

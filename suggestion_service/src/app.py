@@ -5,13 +5,15 @@ import os
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-suggestion_service_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestion_service'))
-sys.path.insert(0, suggestion_service_grpc_path)
-import suggestion_service_pb2 as suggestion_service
-import suggestion_service_pb2_grpc as suggestion_service_grpc
 
-sys.path.insert(1, common_grpc_path)
-sys.path.insert(2, order_grpc_path)
+common_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/common'))
+sys.path.insert(0, common_grpc_path)
+
+order_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/order_data'))
+sys.path.insert(1, order_grpc_path)
+
+suggestion_service_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/suggestion_service'))
+sys.path.insert(2, suggestion_service_grpc_path)
 
 import order_pb2 as order
 import order_pb2_grpc as order_grpc
@@ -19,8 +21,12 @@ import order_pb2_grpc as order_grpc
 import common_pb2 as common
 import common_pb2_grpc as common_grpc
 
+import suggestion_service_pb2 as suggestion_service
+import suggestion_service_pb2_grpc as suggestion_service_grpc
+
 import grpc
 from concurrent import futures
+import logging
 
 # Create a class to define the server functions, derived from
 # fraud_detection_pb2_grpc.HelloServiceServicer
@@ -34,8 +40,8 @@ class SuggestionService(suggestion_service_grpc.SuggestionServicer):
         self.total_svcs = total_svcs
         self.orders = {}
     
-    def InitOrder(self, request: order.OrderData, context)
-        self.orders[request.id] = {"data": data, "vc": [0]*self.total_svcs}
+    def InitOrder(self, request: order.OrderData, context):
+        self.orders[request.id] = {"data": request.data, "vc": [0]*self.total_svcs}
 
     def merge_and_increment(self, local_vc, incoming_vc):
             for i in range(self.total_svcs):
@@ -85,7 +91,7 @@ class SuggestionService(suggestion_service_grpc.SuggestionServicer):
         #response.sug_book_1 = suggestions[0]
         #response.sug_book_2 = suggestions[1]
         #print("Suggested books:", suggestions)
-        response.vector_clock = common_pb2.VectorClock(vector_clock= vector)
+        response.vector_clock = common.VectorClock(vector_clock= vector)
         return response
 
 def serve():

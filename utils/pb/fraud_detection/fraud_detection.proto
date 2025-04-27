@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package fraud_detection;
+
 import "common.proto";
 import "order.proto";
 
