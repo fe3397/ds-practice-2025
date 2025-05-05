@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package order;
+import "common.proto";
 
 message OrderData {
   string id = 1;
@@ -8,6 +9,7 @@ message OrderData {
   CardData carddata = 3;
   UserAdress useradress = 4;
   repeated Book books = 5;
+  common.VectorClock vector_clock = 6;
 }
 
 message UserData {

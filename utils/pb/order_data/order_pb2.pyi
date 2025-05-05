@@ -1,3 +1,4 @@
+import common_pb2 as _common_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
@@ -6,18 +7,20 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class OrderData(_message.Message):
-    __slots__ = ("id", "userdata", "carddata", "useradress", "books")
+    __slots__ = ("id", "userdata", "carddata", "useradress", "books", "vector_clock")
     ID_FIELD_NUMBER: _ClassVar[int]
     USERDATA_FIELD_NUMBER: _ClassVar[int]
     CARDDATA_FIELD_NUMBER: _ClassVar[int]
     USERADRESS_FIELD_NUMBER: _ClassVar[int]
     BOOKS_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
     id: str
     userdata: UserData
     carddata: CardData
     useradress: UserAdress
     books: _containers.RepeatedCompositeFieldContainer[Book]
-    def __init__(self, id: _Optional[str] = ..., userdata: _Optional[_Union[UserData, _Mapping]] = ..., carddata: _Optional[_Union[CardData, _Mapping]] = ..., useradress: _Optional[_Union[UserAdress, _Mapping]] = ..., books: _Optional[_Iterable[_Union[Book, _Mapping]]] = ...) -> None: ...
+    vector_clock: _common_pb2.VectorClock
+    def __init__(self, id: _Optional[str] = ..., userdata: _Optional[_Union[UserData, _Mapping]] = ..., carddata: _Optional[_Union[CardData, _Mapping]] = ..., useradress: _Optional[_Union[UserAdress, _Mapping]] = ..., books: _Optional[_Iterable[_Union[Book, _Mapping]]] = ..., vector_clock: _Optional[_Union[_common_pb2.VectorClock, _Mapping]] = ...) -> None: ...
 
 class UserData(_message.Message):
     __slots__ = ("name", "contact")

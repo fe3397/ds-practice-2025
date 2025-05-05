@@ -2,27 +2,29 @@ syntax = "proto3";
 
 package fraud_detection;
 
+import "common.proto";
+import "order.proto";
+
 service FraudDetection {
     rpc LookforFraud (FraudRequest) returns (FraudResponse);
-}
-
-message UserData {
-    string name = 1;
-    string contact = 2;
-}
-
-message CreditCard {
-    string number = 1;
-    string expirationDate = 2;
-    string cvv = 3;
+    rpc InitOrder (InitFraudRequest) returns (InitFraudResponse);
 }
 
 message FraudRequest {
-    UserData user = 1;
-    CreditCard cc = 2;
+    string order_id = 1;
+    common.VectorClock vector_clock = 2;
 }
 
 
 message FraudResponse {
-    bool fraud = 1;
+    string fraud = 1;
+    common.VectorClock vector_clock = 2;
+}
+
+message InitFraudRequest {
+    order.OrderData order_data = 1;
+}
+
+message InitFraudResponse {
+    string status = 1;
 }
