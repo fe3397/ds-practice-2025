@@ -12,6 +12,7 @@ service Suggestion {
 
 message SuggestionRequest {
     string order_id = 1;
+    common.VectorClock vector_clock = 2;
 }
 
 message SuggestionResponse {

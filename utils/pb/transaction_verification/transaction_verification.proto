@@ -13,6 +13,7 @@ service VerificationService {
 
 message VerificationRequest {
     string order_id = 1;
+    common.VectorClock vector_clock = 2;
 
 }
 

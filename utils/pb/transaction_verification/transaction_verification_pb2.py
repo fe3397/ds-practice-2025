@@ -26,7 +26,7 @@ import common_pb2 as common__pb2
 import order_pb2 as order__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\x0cverification\x1a\x0c\x63ommon.proto\x1a\x0border.proto\"\'\n\x13VerificationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\"S\n\x14VerificationResponse\x12\x10\n\x08response\x18\x01 \x01(\t\x12)\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x13.common.VectorClock\"8\n\x10InitOrderRequest\x12$\n\norder_data\x18\x01 \x01(\x0b\x32\x10.order.OrderData\"#\n\x11InitOrderResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xbf\x01\n\x13VerificationService\x12Z\n\x11VerifyTransaction\x12!.verification.VerificationRequest\x1a\".verification.VerificationResponse\x12L\n\tInitOrder\x12\x1e.verification.InitOrderRequest\x1a\x1f.verification.InitOrderResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\x0cverification\x1a\x0c\x63ommon.proto\x1a\x0border.proto\"R\n\x13VerificationRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12)\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x13.common.VectorClock\"S\n\x14VerificationResponse\x12\x10\n\x08response\x18\x01 \x01(\t\x12)\n\x0cvector_clock\x18\x02 \x01(\x0b\x32\x13.common.VectorClock\"8\n\x10InitOrderRequest\x12$\n\norder_data\x18\x01 \x01(\x0b\x32\x10.order.OrderData\"#\n\x11InitOrderResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xbf\x01\n\x13VerificationService\x12Z\n\x11VerifyTransaction\x12!.verification.VerificationRequest\x1a\".verification.VerificationResponse\x12L\n\tInitOrder\x12\x1e.verification.InitOrderRequest\x1a\x1f.verification.InitOrderResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,13 +34,13 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'transaction_verification_pb
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_VERIFICATIONREQUEST']._serialized_start=75
-  _globals['_VERIFICATIONREQUEST']._serialized_end=114
-  _globals['_VERIFICATIONRESPONSE']._serialized_start=116
-  _globals['_VERIFICATIONRESPONSE']._serialized_end=199
-  _globals['_INITORDERREQUEST']._serialized_start=201
-  _globals['_INITORDERREQUEST']._serialized_end=257
-  _globals['_INITORDERRESPONSE']._serialized_start=259
-  _globals['_INITORDERRESPONSE']._serialized_end=294
-  _globals['_VERIFICATIONSERVICE']._serialized_start=297
-  _globals['_VERIFICATIONSERVICE']._serialized_end=488
+  _globals['_VERIFICATIONREQUEST']._serialized_end=157
+  _globals['_VERIFICATIONRESPONSE']._serialized_start=159
+  _globals['_VERIFICATIONRESPONSE']._serialized_end=242
+  _globals['_INITORDERREQUEST']._serialized_start=244
+  _globals['_INITORDERREQUEST']._serialized_end=300
+  _globals['_INITORDERRESPONSE']._serialized_start=302
+  _globals['_INITORDERRESPONSE']._serialized_end=337
+  _globals['_VERIFICATIONSERVICE']._serialized_start=340
+  _globals['_VERIFICATIONSERVICE']._serialized_end=531
 # @@protoc_insertion_point(module_scope)

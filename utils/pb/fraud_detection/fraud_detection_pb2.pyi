@@ -7,18 +7,20 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class FraudRequest(_message.Message):
-    __slots__ = ("order_id",)
+    __slots__ = ("order_id", "vector_clock")
     ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
     order_id: str
-    def __init__(self, order_id: _Optional[str] = ...) -> None: ...
+    vector_clock: _common_pb2.VectorClock
+    def __init__(self, order_id: _Optional[str] = ..., vector_clock: _Optional[_Union[_common_pb2.VectorClock, _Mapping]] = ...) -> None: ...
 
 class FraudResponse(_message.Message):
     __slots__ = ("fraud", "vector_clock")
     FRAUD_FIELD_NUMBER: _ClassVar[int]
     VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
-    fraud: bool
+    fraud: str
     vector_clock: _common_pb2.VectorClock
-    def __init__(self, fraud: bool = ..., vector_clock: _Optional[_Union[_common_pb2.VectorClock, _Mapping]] = ...) -> None: ...
+    def __init__(self, fraud: _Optional[str] = ..., vector_clock: _Optional[_Union[_common_pb2.VectorClock, _Mapping]] = ...) -> None: ...
 
 class InitFraudRequest(_message.Message):
     __slots__ = ("order_data",)

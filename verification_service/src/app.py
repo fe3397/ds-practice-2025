@@ -15,12 +15,13 @@ sys.path.insert(1, order_grpc_path)
 transaction_verification_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/transaction_verification'))
 sys.path.insert(2, transaction_verification_grpc_path)
 
+import common_pb2 as common
+import common_pb2_grpc as common_grpc
 
 import order_pb2 as order
 import order_pb2_grpc as order_grpc
 
-import common_pb2 as common
-import common_pb2_grpc as common_grpc
+
 
 import transaction_verification_pb2 as transaction_verification
 import transaction_verification_pb2_grpc as transaction_verification_grpc
@@ -41,30 +42,48 @@ class TransactionVerificationService(transaction_verification_grpc.VerificationS
 
 
     def InitOrder(self, request: order.OrderData , context):
-        self.orders[request.id] = {"data": data, "vc": [0]*self.total_svcs}
+        print("InitOrder received request:", request.order_data.id)
+        order_data = request.order_data
+        response = transaction_verification.InitOrderResponse()
+
+        self.orders[order_data.id] = {"data": order_data, "vc": [0] * self.total_svcs}
+        if self.orders[order_data.id]["data"]:
+            response.status = "OK"
+            return response
+        else:
+            response.status = "FAIL"
+            return response
 
     def merge_and_increment(self, local_vc, incoming_vc):
         for i in range(self.total_svcs):
             local_vc[i] = max(local_vc[i], incoming_vc[i])
         local_vc[self.svc_idx] += 1
 
-    def VerifyTransaction (order_id):
+    def VerifyTransaction (self, request: transaction_verification.VerificationRequest, context):
         logging.info("starting transaction verification")
         response = transaction_verification.VerificationResponse()
 
-        cache = self.orders.get(order_id)
+        cache = self.orders.get(request.order_id)
 
         if not cache:
             context.abort(grpc.StatusCode.NOT_FOUND, "Order not found")
 
+        incoming_vector = list(request.vector_clock.clock)
+        if len(incoming_vector) > 0:
+            logging.info(f"incoming: {incoming_vector}")
+        else:
+            incoming_vector = [0] * self.total_svcs
+
         order = cache["data"]
         vector = cache["vc"]
+
         cardnumber = order.carddata.card_number
         cvv = order.carddata.cvv
         exp_date = order.carddata.expiration
+
         books = order.books
         def verify_items():
-            self.merge_and_increment(vector, vector)
+            self.merge_and_increment(vector, incoming_vector)
             logging.info(f"[a] Vector clock after VerifyItems: {vector}")
             return bool(books)
 
@@ -87,13 +106,25 @@ class TransactionVerificationService(transaction_verification_grpc.VerificationS
             reg_exp = re.match(r"^(0[1-9]|1[0-2])\/\d{2}$", exp_date) 
             logging.info("expiration date valid")
             if reg_card is not None and reg_cvv is not None and reg_exp is not None:
-                response.response = "OK"
-                response.vector_clock = common_pb2.VectorClock(vector_clock=vector)
                 logging.info("verification successful")
+                return True
             else:
-                response.response = "ERROR"
                 logging.error("verification unsuccessful")
+                return False
+
+        items = verify_items()
+        user_data = verify_user_data()
+        card_info = verify_card_format()
+
+        if items and user_data and card_info:
+            response.response = "OK"
+            response.vector_clock.clock[:] = vector
             return response
+        else:
+            response.response = "FAIL"
+            response.vector_clock.clock[:] = vector
+            return response
+
 
 def serve():
     # Create a gRPC server

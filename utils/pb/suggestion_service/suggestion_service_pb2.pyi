@@ -7,10 +7,12 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class SuggestionRequest(_message.Message):
-    __slots__ = ("order_id",)
+    __slots__ = ("order_id", "vector_clock")
     ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
     order_id: str
-    def __init__(self, order_id: _Optional[str] = ...) -> None: ...
+    vector_clock: _common_pb2.VectorClock
+    def __init__(self, order_id: _Optional[str] = ..., vector_clock: _Optional[_Union[_common_pb2.VectorClock, _Mapping]] = ...) -> None: ...
 
 class SuggestionResponse(_message.Message):
     __slots__ = ("sug_book_1", "sug_book_2", "vector_clock")

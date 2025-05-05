@@ -12,11 +12,12 @@ service FraudDetection {
 
 message FraudRequest {
     string order_id = 1;
+    common.VectorClock vector_clock = 2;
 }
 
 
 message FraudResponse {
-    bool fraud = 1;
+    string fraud = 1;
     common.VectorClock vector_clock = 2;
 }
 
