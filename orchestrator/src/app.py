@@ -23,6 +23,11 @@ transaction_verification_grpc_path = os.path.abspath(
     os.path.join(os.path.dirname(FILE), '../../utils/pb/transaction_verification'))
 sys.path.insert(4, transaction_verification_grpc_path)
 
+order_queue_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_data'))
+sys.path.insert(0, order_queue_grpc_path)
+import order_pb2 as order_queue
+import order_pb2_grpc as order_queue_grpc
+
 import common_pb2 as common
 import common_pb2_grpc as common_grpc
 
@@ -45,16 +50,16 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def enqueue_order(order_data):
-    with grpc.insecure_channel('order_queue:50054') as channel:
+    with grpc.insecure_channel('queue_service:50054') as channel:
         print("channel found")
         stub = order_queue_grpc.OrderQueueStub(channel)
         print("stub made")
         print("Order Data:", order_data)
-        response = stub.Enqueue(order_queue.OrderData(id=order_data.id, userdata=order_data.userdata, carddata=order_data.carddata, useradress=order_data.useradress, books=order_data.books))
+        response = stub.Enqueue(order_pb2.EnqueueRequest(order_data=order_data))
         return response
 
 def dequeue_order():
-    with grpc.insecure_channel('order_queue:50054') as channel:
+    with grpc.insecure_channel('queue_service:50054') as channel:
         stub = order_queue_grpc.OrderQueueStub(channel)
         response = stub.Dequeue(order_queue.DequeueRequest())
         return response
@@ -184,9 +189,9 @@ def checkout():
     init_verif = init_verification(order_data)
     logging.info(f"Order verification init {init_verif}")
     init_fraud = init_fraud_detection(order_data)
-    logging.info(f"Order fraud detection init {init_verif}")
-    init_sug = init_suggestion(order_data)
-    logging.info(f"Order suggestion init {init_verif}")
+    logging.info(f"Order fraud detection init {init_fraud}")
+    init_sugg = init_suggestion(order_data)
+    logging.info(f"Order suggestion init {init_sugg}")
 
     response_verify = verify(order_data.id, [0, 0, 0])
     logging.info(f"Verification vector clock: {response_verify[1].clock}")
@@ -195,17 +200,11 @@ def checkout():
     logging.info(f"Fraud detection vector clock: {response_fraud[1].clock}")
 
     response_sugg = suggest(order_data.id, list(response_fraud[1].clock))
-    logging.info(f"Suggestion vector clock")
+    logging.info(f"Suggestion vector clock: {response_sugg.vector_clock.clock}")
 
-    # Check for fraud
-    is_fraud = checkFraud(request_data.get('user'), request_data.get('creditCard'))
-    order_data = order(request_data)
-    verification_response = verify(order_data)
-    print("Verification Response:", verification_response)
-    print("Fraud Detection Response:", is_fraud)
-    print("Enqueing Order:", order_data.id)
 
-    if verification_response == 'OK' and not is_fraud and suggestions.sug_book_1 != '' and suggestions.sug_book_2 != '':
+
+    if response_verify and response_fraud and response_sugg:
         enqueue_response = enqueue_order(order_data)
         print("Enqueue Response:", enqueue_response)
 
@@ -214,8 +213,8 @@ def checkout():
                 'orderId': order(request_data).id,
                 'status': 'Order Approved',
                 'suggestedBooks': [
-                    {'bookId': '123', 'title': suggestions.sug_book_1, 'author': 'Author 1'},
-                    {'bookId': '456', 'title': suggestions.sug_book_2, 'author': 'Author 2'}
+                    {'bookId': '123', 'title': response_sugg.sug_book_1, 'author': 'Author 1'},
+                    {'bookId': '456', 'title': response_sugg.sug_book_2, 'author': 'Author 2'}
                 ]
             }
         else:

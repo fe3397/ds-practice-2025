@@ -127,15 +127,14 @@ services:
   order_executor:
     build:
       context: ./
-      dockerfile: ./order_executor/Dockerfile
-    ports:
-      - 50055:50055
+      dockerfile: ./executor_service/Dockerfile
+
     environment:
       - PYTHONUNBUFFERED=TRUE
-      - PYTHONFILE=/app/order_executor/src/order_executor_service.py
+      - PYTHONFILE=/app/order_executor/src/app.py
     volumes:
       - ./utils:/app/utils
-      - ./order_executor/src:/app/order_executor/src
+      - ./executor_service/src:/app/executor_service/src
     deploy:
       replicas: 2  # Run 2 instances of the service
       restart_policy:

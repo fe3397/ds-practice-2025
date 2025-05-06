@@ -6,7 +6,11 @@ import "common.proto";
 service OrderQueue {
     rpc Enqueue (OrderData) returns (EnqueueResponse);
 
-    rpc Dequeue (DequeueRequest) returns (OrderData);
+    rpc Dequeue (DequeueRequest) returns (DequeueResponse);
+}
+
+message EnqueueRequest {
+  OrderData order_data = 1;
 }
 
 message OrderData {
@@ -47,3 +51,7 @@ message EnqueueResponse {
 }
 
 message DequeueRequest {}
+
+message DequeueResponse{
+  OrderData order_data = 1;
+}

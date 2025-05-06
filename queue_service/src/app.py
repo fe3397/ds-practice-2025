@@ -5,37 +5,45 @@ import os
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-queue_service_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_data'))
-sys.path.insert(0, queue_service_grpc_path)
+
+common_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/common'))
+sys.path.insert(0, common_grpc_path)
+
+queue_service_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/order_data'))
+sys.path.insert(1, queue_service_grpc_path)
+
 import order_pb2 as order_queue
 import order_pb2_grpc as order_queue_grpc
 
 import grpc
 from concurrent import futures
 import threading
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class OrderQueueService(order_queue_grpc.OrderQueueServicer):
     def __init__(self):
         self._lock = threading.Lock()
         self.order_queue = []
 
-    def Enqueue(self, request, context):
+    def Enqueue(self, request: order_queue.EnqueueRequest, context):
         print("Received order data:")
         with self._lock:
             premium_user = True #request.userdata.premium_user
             if premium_user:
-                print("Premium user detected. Adding to the front of the queue.")
+                logging.info("Premium user detected. Adding to the front of the queue.")
                 self.order_queue.insert(0, request)
             else:
-                print("Regular user detected. Adding to the end of the queue.")
+                logging.info("Regular user detected. Adding to the end of the queue.")
             self.order_queue.append(request)
-            print(f"Order {request.id} added to the queue.")
+            logging.info(f"Order {request.id} added to the queue.")
         return order_queue.EnqueueResponse(success=True)
 
     def Dequeue(self, request, context):
         if self.order_queue:
-            order = self.order_queue.pop(0)
-            print(f"Order {order.id} dequeued from the queue.")
+            order = self.order_queue.pop()
+            logging.info(f"Order {order.id} dequeued from the queue.")
             return order
         else:
             context.set_code(grpc.StatusCode.NOT_FOUND)

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package executor;
 
-import "order_data/order.proto";
+import "order.proto";
 
 service OrderExecutor {
     rpc Dequeue (DequeueRequest) returns (order.OrderData);

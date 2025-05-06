@@ -6,6 +6,12 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
+class EnqueueRequest(_message.Message):
+    __slots__ = ("order_data",)
+    ORDER_DATA_FIELD_NUMBER: _ClassVar[int]
+    order_data: OrderData
+    def __init__(self, order_data: _Optional[_Union[OrderData, _Mapping]] = ...) -> None: ...
+
 class OrderData(_message.Message):
     __slots__ = ("id", "userdata", "carddata", "useradress", "books", "vector_clock")
     ID_FIELD_NUMBER: _ClassVar[int]
@@ -61,3 +67,19 @@ class Book(_message.Message):
     name: str
     amount: int
     def __init__(self, name: _Optional[str] = ..., amount: _Optional[int] = ...) -> None: ...
+
+class EnqueueResponse(_message.Message):
+    __slots__ = ("success",)
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    success: bool
+    def __init__(self, success: bool = ...) -> None: ...
+
+class DequeueRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class DequeueResponse(_message.Message):
+    __slots__ = ("order_data",)
+    ORDER_DATA_FIELD_NUMBER: _ClassVar[int]
+    order_data: OrderData
+    def __init__(self, order_data: _Optional[_Union[OrderData, _Mapping]] = ...) -> None: ...
