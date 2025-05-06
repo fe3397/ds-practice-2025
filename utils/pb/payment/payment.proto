@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package payment;
+
+// Service definition for the PaymentService
+service PaymentService {
+    // Prepare phase: Check if the participant is ready to commit
+    rpc Prepare(PrepareRequest) returns (PrepareResponse);
+
+    // Commit phase: Finalize the transaction
+    rpc Commit(CommitRequest) returns (CommitResponse);
+
+    // Abort phase: Roll back the transaction
+    rpc Abort(AbortRequest) returns (AbortResponse);
+}
+
+// Request message for the Prepare RPC
+message PrepareRequest {
+    // Add any fields needed for the prepare phase (if required)
+}
+
+// Response message for the Prepare RPC
+message PrepareResponse {
+    bool ready = 1; // Indicates if the participant is ready to commit
+}
+
+// Request message for the Commit RPC
+message CommitRequest {
+    // Add any fields needed for the commit phase (if required)
+}
+
+// Response message for the Commit RPC
+message CommitResponse {
+    bool success = 1; // Indicates if the commit was successful
+}
+
+// Request message for the Abort RPC
+message AbortRequest {
+    // Add any fields needed for the abort phase (if required)
+}
+
+// Response message for the Abort RPC
+message AbortResponse {
+    bool aborted = 1; // Indicates if the abort was successful
+}

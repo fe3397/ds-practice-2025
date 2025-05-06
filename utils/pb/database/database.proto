@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package database;
+
+service BooksDatabase {
+    rpc Read (ReadRequest) returns (ReadResponse);
+    rpc Write (WriteRequest) returns (WriteResponse);
+    rpc DecrementStock (DecrementStockRequest) returns (DecrementStockResponse);
+    rpc IncrementStock (IncrementStockRequest) returns (IncrementStockResponse);
+
+    rpc Prepare (PrepareRequest) returns (PrepareResponse);
+    rpc Commit (CommitRequest) returns (CommitResponse);
+    rpc Abort (AbortRequest) returns (AbortResponse);
+}
+
+message ReadRequest {
+    string title = 1;
+}
+
+message ReadResponse {
+    int32 stock = 1;
+}
+
+message WriteRequest {
+    string title = 1;
+    int32 new_stock = 2;
+}
+
+message WriteResponse {
+    bool success = 1;
+}
+
+message PrepareRequest {}
+
+message PrepareResponse {
+    bool ready = 1;
+}
+
+message CommitRequest {}
+
+message CommitResponse {
+    bool success = 1;
+}
+
+message AbortRequest {}
+
+message AbortResponse {
+    bool aborted = 1;
+}
+
+message DecrementStockRequest {}
+
+message DecrementStockResponse {
+    bool success = 1;
+}
+
+message IncrementStockRequest {}
+
+message IncrementStockResponse {
+    bool success = 1;
+}
