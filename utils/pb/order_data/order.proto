@@ -3,6 +3,16 @@ syntax = "proto3";
 package order;
 import "common.proto";
 
+service OrderQueue {
+    rpc Enqueue (OrderData) returns (EnqueueResponse);
+
+    rpc Dequeue (DequeueRequest) returns (DequeueResponse);
+}
+
+message EnqueueRequest {
+  OrderData order_data = 1;
+}
+
 message OrderData {
   string id = 1;
   UserData userdata = 2;
@@ -34,4 +44,14 @@ message UserAdress{
 message Book{
   string name = 1;
   int32 amount = 2;
+}
+
+message EnqueueResponse {
+  bool success = 1;
+}
+
+message DequeueRequest {}
+
+message DequeueResponse{
+  OrderData order_data = 1;
 }

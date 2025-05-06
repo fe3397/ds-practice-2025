@@ -23,6 +23,11 @@ transaction_verification_grpc_path = os.path.abspath(
     os.path.join(os.path.dirname(FILE), '../../utils/pb/transaction_verification'))
 sys.path.insert(4, transaction_verification_grpc_path)
 
+order_queue_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_data'))
+sys.path.insert(0, order_queue_grpc_path)
+import order_pb2 as order_queue
+import order_pb2_grpc as order_queue_grpc
+
 import common_pb2 as common
 import common_pb2_grpc as common_grpc
 
@@ -44,6 +49,20 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def enqueue_order(order_data):
+    with grpc.insecure_channel('queue_service:50054') as channel:
+        print("channel found")
+        stub = order_queue_grpc.OrderQueueStub(channel)
+        print("stub made")
+        print("Order Data:", order_data)
+        response = stub.Enqueue(order_pb2.EnqueueRequest(order_data=order_data))
+        return response
+
+def dequeue_order():
+    with grpc.insecure_channel('queue_service:50054') as channel:
+        stub = order_queue_grpc.OrderQueueStub(channel)
+        response = stub.Dequeue(order_queue.DequeueRequest())
+        return response
 
 def init_verification(order_data):
     with grpc.insecure_channel('transaction_verification:50052') as channel:
@@ -170,9 +189,9 @@ def checkout():
     init_verif = init_verification(order_data)
     logging.info(f"Order verification init {init_verif}")
     init_fraud = init_fraud_detection(order_data)
-    logging.info(f"Order fraud detection init {init_verif}")
-    init_sug = init_suggestion(order_data)
-    logging.info(f"Order suggestion init {init_verif}")
+    logging.info(f"Order fraud detection init {init_fraud}")
+    init_sugg = init_suggestion(order_data)
+    logging.info(f"Order suggestion init {init_sugg}")
 
     response_verify = verify(order_data.id, [0, 0, 0])
     logging.info(f"Verification vector clock: {response_verify[1].clock}")
@@ -181,30 +200,37 @@ def checkout():
     logging.info(f"Fraud detection vector clock: {response_fraud[1].clock}")
 
     response_sugg = suggest(order_data.id, list(response_fraud[1].clock))
-    logging.info(f"Suggestion vector clock")
+    logging.info(f"Suggestion vector clock: {response_sugg.vector_clock.clock}")
 
-    # Check for fraud
-    #
-    # if is_fraud:
-    #     order_status_response = {
-    #         'orderId': '12345',
-    #         'status': 'Your transaction was flagged as potentially fraudulent. Please contact support.',
-    #         'suggestedBooks': [
-    #             {'bookId': '123', 'title': 'The Best Book', 'author': 'Author 1'},
-    #             {'bookId': '456', 'title': 'The Second Best Book', 'author': 'Author 2'}
-    #         ]
-    #     }
-    # else:
-    #     # Dummy response following the provided YAML specification for the bookstore
-    #     order_status_response = {
-    #         'orderId': '12345',
-    #         'status': 'Order Approved',
-    #         'suggestedBooks': [
-    #             {'bookId': '123', 'title': "suggestions.sug_book_1", 'author': 'Author 1'},
-    #             {'bookId': '456', 'title': "suggestions.sug_book_2", 'author': 'Author 2'}
-    #         ]
-    #     }
-    # verification_response = verify(request_data)
+
+
+    if response_verify and response_fraud and response_sugg:
+        enqueue_response = enqueue_order(order_data)
+        print("Enqueue Response:", enqueue_response)
+
+        if enqueue_response.success:
+            order_status_response = {
+                'orderId': order(request_data).id,
+                'status': 'Order Approved',
+                'suggestedBooks': [
+                    {'bookId': '123', 'title': response_sugg.sug_book_1, 'author': 'Author 1'},
+                    {'bookId': '456', 'title': response_sugg.sug_book_2, 'author': 'Author 2'}
+                ]
+            }
+        else:
+            order_status_response = {
+                'orderId': 'dummy',#order(request_data).id,
+                'status': 'Order Failed',
+                'suggestedBooks': []
+            }
+    else:
+        order_status_response = {
+            'orderId': 'dummy',#order(request_data).id,
+            'status': 'Order Failed',
+            'suggestedBooks': []
+        }
+    print("Order Status Response:", order_status_response)
+
     return order_status_response
 
 

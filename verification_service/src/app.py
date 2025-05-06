@@ -98,12 +98,12 @@ class TransactionVerificationService(transaction_verification_grpc.VerificationS
         def verify_card_format():
             self.merge_and_increment(vector, vector)
             logging.info(f"[a] Vector clock after VerifyCardFormat: {vector}")
-            
+
             reg_card = re.match(r"^(?:4[0-9]{12}(?:[0-9]{3})?|[25][1-7][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\d{3})\d{11})$", cardnumber)
             logging.info("card number valid")
             reg_cvv = re.match(r"^[0-9]{3,4}$", cvv)
             logging.info("cvv valid")
-            reg_exp = re.match(r"^(0[1-9]|1[0-2])\/\d{2}$", exp_date) 
+            reg_exp = re.match(r"^(0[1-9]|1[0-2])\/\d{2}$", exp_date)
             logging.info("expiration date valid")
             if reg_card is not None and reg_cvv is not None and reg_exp is not None:
                 logging.info("verification successful")

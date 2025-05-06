@@ -20,7 +20,7 @@ message VerificationRequest {
 message VerificationResponse {
     string response = 1;
     common.VectorClock vector_clock = 2;
-    
+
 }
 
 message InitOrderRequest {
