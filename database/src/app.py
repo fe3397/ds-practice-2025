@@ -71,9 +71,13 @@ class PrimaryReplica(BooksDatabaseService):
         self.store[request.title] = request.new_stock
         for backup in self.backups:
             try:
-                backup.Write(request)
+                response = backup.Write(request)
+                if not response.success:
+                    print(f"Failed to write to backup: {backup}")
+                    return database.WriteResponse(success=False)
             except Exception as e:
                 print(f"Failed to write to backup: {e}")
+                return database.WriteResponse(success=False)
         return database.WriteResponse(success=True)
     
 def serve():

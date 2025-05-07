@@ -17,6 +17,9 @@ sys.path.insert(1, order_grpc_path)
 executor_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/executor'))
 sys.path.insert(2, executor_grpc_path)
 
+import common_pb2 as common
+import common_pb2_grpc as common_grpc
+
 import executor_pb2 as executor
 import executor_pb2_grpc as executor_grpc
 
@@ -107,7 +110,32 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
                             logging.info(f"Order {response.id} is being executed...")
                     # else:
                     #     logging.info("No orders in the queue.")
-
+    
+    def two_phase_commit(order_id, participants):
+        ready_votes = []
+        for service in participants:
+            try:
+                response = service.Prepare(common.PrepareRequest(order_id=order_id))
+                ready_votes.append(response.ready)
+            except Exception as e:
+                logging.error(f"Failed to prepare order {order_id} with {service}: {e}")
+                ready_votes.append(False)
+        if all(ready_votes):
+            for service in participants:
+                try:
+                    service.Commit(common.CommitRequest(order_id=order_id))
+                except Exception as e:
+                    logging.error(f"Failed to commit order {order_id} to {service}: {e}")
+                    return
+            print("All services committed")
+        else:
+            for service in participants:
+                try:
+                    service.Abort(common.AbortRequest(order_id=order_id))
+                except Exception as e:
+                    logging.error(f"Failed to abort order {order_id} with {service}: {e}")
+                    return
+            print("Transaction aborted")
 
 
 
