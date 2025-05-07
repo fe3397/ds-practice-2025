@@ -2,7 +2,7 @@ import sys
 import os
 
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-database_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/database'))
+database_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/database'))
 sys.path.insert(0, database_grpc_path)
 import database_pb2 as database
 import database_pb2_grpc as database_grpc
@@ -82,11 +82,11 @@ def serve():
     # Add Suggestions
     database_grpc.add_BooksDatabaseServicer_to_server(BooksDatabaseService(), server)
     # Listen on port 50056
-    port = "50056"
+    port = "50057"
     server.add_insecure_port("[::]:" + port)
     # Start the server
     server.start()
-    print("Server started. Listening on port 50056.")
+    print(f"Server started. Listening on port {port}.")
     # Keep thread alive
     server.wait_for_termination()
 

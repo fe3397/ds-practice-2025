@@ -17,7 +17,7 @@ sys.path.insert(0, payment_grpc_path)
 import payment_pb2 as payment
 import payment_pb2_grpc as payment_grpc
 
-class PaymentService(payment_grpc.PaymentServicer):
+class PaymentService(payment_grpc.PaymentServiceServicer):
     def __init__(self):
         self.prepared = False
         self.recover()
@@ -56,13 +56,13 @@ def serve():
     # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor())
     # Add Suggestions
-    payment_grpc.add_PaymentServicer_to_server(PaymentService(), server)
+    payment_grpc.add_PaymentServiceServicer_to_server(PaymentService(), server)
     # Listen on port 50055
-    port = "50055"
+    port = "50056"
     server.add_insecure_port("[::]:" + port)
     # Start the server
     server.start()
-    print("Server started. Listening on port 50055.")
+    print(f"Server started. Listening on port {port}.")
     # Keep thread alive
     server.wait_for_termination()
 

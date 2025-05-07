@@ -36,7 +36,7 @@ class OrderQueueService(order_queue_grpc.OrderQueueServicer):
                 self.order_queue.insert(0, request)
             else:
                 logging.info("Regular user detected. Adding to the end of the queue.")
-            self.order_queue.append(request)
+                self.order_queue.append(request)
             logging.info(f"Order {request.id} added to the queue.")
         return order_queue.EnqueueResponse(success=True)
 
@@ -46,8 +46,7 @@ class OrderQueueService(order_queue_grpc.OrderQueueServicer):
             logging.info(f"Order {order.id} dequeued from the queue.")
             return order
         else:
-            context.set_code(grpc.StatusCode.NOT_FOUND)
-            context.set_details("No orders in the queue.")
+            logging.info("No orders in the queue.")
             return order_queue.OrderData()
     
 def serve():

@@ -34,7 +34,7 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
     def __init__(self):
         self._lock = threading.Lock()
         self.leader_id = None
-        self.instance_id = str(uuid.uuid4())  # Unique ID for this instance
+        self.instance_id = os.environ.get("INSTANCE_ID", socket.gethostname())  # Unique ID for this instance
         self.peers = self.discover_peers()
         self.election_in_progress = False
 
@@ -65,8 +65,8 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
                 self.leader_id = request.instance_id
                 is_leader = (self.instance_id == self.leader_id)
             else:
-                is_leader = False
-            print(f"Leader Election: Instance {request.instance_id} is leader: {is_leader}")
+                is_leader = (self.instance_id == self.leader_id)
+            print(f"[{self.instance_id[:8]}] Received election request from {request.instance_id[:8]} - My leader: {self.leader_id[:8]}, Am I leader? {is_leader}")
             return executor.LeaderElectionResponse(leader_id=self.leader_id, is_leader=is_leader)
 
     def run_leader_election(self):
@@ -77,22 +77,23 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
                     with grpc.insecure_channel(f"{peer}:50055") as channel:
                         stub = executor_grpc.OrderExecutorStub(channel)
                         response = stub.ElectLeader(executor.LeaderElectionRequest(instance_id=self.instance_id))
+                        print(response)
                         if response.leader_id > highest_id:
                             highest_id = response.leader_id
                 with self._lock:
                     self.leader_id = highest_id
                     if self.leader_id == self.instance_id:
                         logging.warning(f"[{self.instance_id[:8]}] I am the LEADER.")
-                    else:
-                        logging.warning(f"[{self.instance_id[:8]}] Current leader is {self.leader_id[:8]}")
+                    # else:
+                    #     logging.warning(f"[{self.instance_id[:8]}] Current leader is {self.leader_id[:8]}")
 
             except Exception as e:
                 logging.critical(f"[{self.instance_id[:8]}] Leader election error: {e}")
-            time.sleep(300)
+            time.sleep(100)
 
     def process_order(self):
         while True:
-            time.sleep(5)
+            time.sleep(10)
             # Ensure only the leader can dequeue
             if self.instance_id != self.leader_id:
                 continue
@@ -100,8 +101,10 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
                 with grpc.insecure_channel('queue_service:50054') as channel:
                     stub = order_queue_grpc.OrderQueueStub(channel)
                     response = stub.Dequeue(order_queue.DequeueRequest())
-                    # if response.id:
-                    #     logging.info(f"Order {response.id} is being executed...")
+                    time.sleep(2)
+                    if response.id:
+                        with self._lock:
+                            logging.info(f"Order {response.id} is being executed...")
                     # else:
                     #     logging.info("No orders in the queue.")
 
