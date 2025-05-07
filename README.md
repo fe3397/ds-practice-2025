@@ -54,3 +54,8 @@ Diagrams
 
 ![ms2vectorclock](https://github.com/user-attachments/assets/47533398-3675-46cd-8e09-6c38d25c1916)
 
+![consistency_protocol](https://github.com/user-attachments/assets/b7e169b4-6d66-4dea-bba3-860e107d2422)
+
+![distributed_commit](https://github.com/user-attachments/assets/e3e11ce3-2e04-4100-a7e5-38774e261943)
+
+
