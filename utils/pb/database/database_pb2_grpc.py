@@ -69,6 +69,16 @@ class BooksDatabaseStub(object):
                 request_serializer=database__pb2.AbortRequest.SerializeToString,
                 response_deserializer=database__pb2.AbortResponse.FromString,
                 _registered_method=True)
+        self.IsHead = channel.unary_unary(
+                '/database.BooksDatabase/IsHead',
+                request_serializer=database__pb2.IsHeadRequest.SerializeToString,
+                response_deserializer=database__pb2.IsHeadResponse.FromString,
+                _registered_method=True)
+        self.IsTail = channel.unary_unary(
+                '/database.BooksDatabase/IsTail',
+                request_serializer=database__pb2.IsTailRequest.SerializeToString,
+                response_deserializer=database__pb2.IsTailResponse.FromString,
+                _registered_method=True)
 
 
 class BooksDatabaseServicer(object):
@@ -116,6 +126,18 @@ class BooksDatabaseServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def IsHead(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def IsTail(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_BooksDatabaseServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -153,6 +175,16 @@ def add_BooksDatabaseServicer_to_server(servicer, server):
                     servicer.Abort,
                     request_deserializer=database__pb2.AbortRequest.FromString,
                     response_serializer=database__pb2.AbortResponse.SerializeToString,
+            ),
+            'IsHead': grpc.unary_unary_rpc_method_handler(
+                    servicer.IsHead,
+                    request_deserializer=database__pb2.IsHeadRequest.FromString,
+                    response_serializer=database__pb2.IsHeadResponse.SerializeToString,
+            ),
+            'IsTail': grpc.unary_unary_rpc_method_handler(
+                    servicer.IsTail,
+                    request_deserializer=database__pb2.IsTailRequest.FromString,
+                    response_serializer=database__pb2.IsTailResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -344,6 +376,60 @@ class BooksDatabase(object):
             '/database.BooksDatabase/Abort',
             database__pb2.AbortRequest.SerializeToString,
             database__pb2.AbortResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def IsHead(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/database.BooksDatabase/IsHead',
+            database__pb2.IsHeadRequest.SerializeToString,
+            database__pb2.IsHeadResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def IsTail(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/database.BooksDatabase/IsTail',
+            database__pb2.IsTailRequest.SerializeToString,
+            database__pb2.IsTailResponse.FromString,
             options,
             channel_credentials,
             insecure,
