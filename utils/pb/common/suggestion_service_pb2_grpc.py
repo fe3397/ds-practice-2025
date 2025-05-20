@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import order_pb2 as order__pb2
+import suggestion_service_pb2 as suggestion__service__pb2
 
 GRPC_GENERATED_VERSION = '1.70.0'
 GRPC_VERSION = grpc.__version__
@@ -18,14 +18,14 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in order_pb2_grpc.py depends on'
+        + f' but the generated code in suggestion_service_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
 
 
-class OrderQueueStub(object):
+class SuggestionStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -34,59 +34,59 @@ class OrderQueueStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Enqueue = channel.unary_unary(
-                '/order.OrderQueue/Enqueue',
-                request_serializer=order__pb2.EnqueueRequest.SerializeToString,
-                response_deserializer=order__pb2.EnqueueResponse.FromString,
+        self.MakeSuggestion = channel.unary_unary(
+                '/suggestion_service.Suggestion/MakeSuggestion',
+                request_serializer=suggestion__service__pb2.SuggestionRequest.SerializeToString,
+                response_deserializer=suggestion__service__pb2.SuggestionResponse.FromString,
                 _registered_method=True)
-        self.Dequeue = channel.unary_unary(
-                '/order.OrderQueue/Dequeue',
-                request_serializer=order__pb2.DequeueRequest.SerializeToString,
-                response_deserializer=order__pb2.DequeueResponse.FromString,
+        self.InitOrder = channel.unary_unary(
+                '/suggestion_service.Suggestion/InitOrder',
+                request_serializer=suggestion__service__pb2.InitSuggestionRequest.SerializeToString,
+                response_deserializer=suggestion__service__pb2.InitSuggestionResponse.FromString,
                 _registered_method=True)
 
 
-class OrderQueueServicer(object):
+class SuggestionServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def Enqueue(self, request, context):
+    def MakeSuggestion(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Dequeue(self, request, context):
+    def InitOrder(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_OrderQueueServicer_to_server(servicer, server):
+def add_SuggestionServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Enqueue': grpc.unary_unary_rpc_method_handler(
-                    servicer.Enqueue,
-                    request_deserializer=order__pb2.EnqueueRequest.FromString,
-                    response_serializer=order__pb2.EnqueueResponse.SerializeToString,
+            'MakeSuggestion': grpc.unary_unary_rpc_method_handler(
+                    servicer.MakeSuggestion,
+                    request_deserializer=suggestion__service__pb2.SuggestionRequest.FromString,
+                    response_serializer=suggestion__service__pb2.SuggestionResponse.SerializeToString,
             ),
-            'Dequeue': grpc.unary_unary_rpc_method_handler(
-                    servicer.Dequeue,
-                    request_deserializer=order__pb2.DequeueRequest.FromString,
-                    response_serializer=order__pb2.DequeueResponse.SerializeToString,
+            'InitOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.InitOrder,
+                    request_deserializer=suggestion__service__pb2.InitSuggestionRequest.FromString,
+                    response_serializer=suggestion__service__pb2.InitSuggestionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'order.OrderQueue', rpc_method_handlers)
+            'suggestion_service.Suggestion', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('order.OrderQueue', rpc_method_handlers)
+    server.add_registered_method_handlers('suggestion_service.Suggestion', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class OrderQueue(object):
+class Suggestion(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def Enqueue(request,
+    def MakeSuggestion(request,
             target,
             options=(),
             channel_credentials=None,
@@ -99,9 +99,9 @@ class OrderQueue(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/order.OrderQueue/Enqueue',
-            order__pb2.EnqueueRequest.SerializeToString,
-            order__pb2.EnqueueResponse.FromString,
+            '/suggestion_service.Suggestion/MakeSuggestion',
+            suggestion__service__pb2.SuggestionRequest.SerializeToString,
+            suggestion__service__pb2.SuggestionResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -113,7 +113,7 @@ class OrderQueue(object):
             _registered_method=True)
 
     @staticmethod
-    def Dequeue(request,
+    def InitOrder(request,
             target,
             options=(),
             channel_credentials=None,
@@ -126,9 +126,9 @@ class OrderQueue(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/order.OrderQueue/Dequeue',
-            order__pb2.DequeueRequest.SerializeToString,
-            order__pb2.DequeueResponse.FromString,
+            '/suggestion_service.Suggestion/InitOrder',
+            suggestion__service__pb2.InitSuggestionRequest.SerializeToString,
+            suggestion__service__pb2.InitSuggestionResponse.FromString,
             options,
             channel_credentials,
             insecure,

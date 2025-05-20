@@ -17,6 +17,12 @@ sys.path.insert(1, order_grpc_path)
 executor_grpc_path = os.path.abspath(os.path.join(os.path.dirname(FILE), '../../utils/pb/executor'))
 sys.path.insert(2, executor_grpc_path)
 
+database_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/database'))
+sys.path.insert(3, database_grpc_path)
+
+payment_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/payment'))
+sys.path.insert(4, payment_grpc_path)
+
 import common_pb2 as common
 import common_pb2_grpc as common_grpc
 
@@ -30,6 +36,12 @@ import uuid
 
 import order_pb2 as order_queue
 import order_pb2_grpc as order_queue_grpc
+
+import database_pb2 as database
+import database_pb2_grpc as database_grpc
+
+import payment_pb2 as payment
+import payment_pb2_grpc as payment_grpc
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -105,35 +117,62 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
                     stub = order_queue_grpc.OrderQueueStub(channel)
                     response = stub.Dequeue(order_queue.DequeueRequest())
                     time.sleep(2)
-                    if response.id:
+                    if response.order_data.id:
                         with self._lock:
-                            logging.info(f"Order {response.id} is being executed...")
-                    # else:
-                    #     logging.info("No orders in the queue.")
-    
-    def two_phase_commit(order_id, participants):
+                            # 1. Prepare participants for 2PC
+                            participants = []
+                            db_channel = grpc.insecure_channel('database_head:50057')
+                            db_stub = database_grpc.BooksDatabaseStub(db_channel)
+                            participants.append(db_stub)
+                            payment_channel = grpc.insecure_channel('payment:50056')
+                            payment_stub = payment_grpc.PaymentServiceStub(payment_channel)
+                            participants.append(payment_stub)
+                            # 2. Run 2PC
+                            if self.two_phase_commit(participants): #response.order_data.id, 
+                                # 3. Only do the actual decrement if 2PC succeeded
+                                for book in response.order_data.books:
+                                    print(f"Processing book: {book.name}, Amount: {book.amount}")
+                                    # Read current stock from the tail
+                                    with grpc.insecure_channel('database_tail:50057') as db_channel:
+                                        db_stub = database_grpc.BooksDatabaseStub(db_channel)
+                                        read_resp = db_stub.Read(database.ReadRequest(title=book.name))
+                                        old_stock = read_resp.stock
+                                    # Write (decrement) to the head
+                                    with grpc.insecure_channel('database_head:50057') as db_channel:
+                                        db_stub = database_grpc.BooksDatabaseStub(db_channel)
+                                        for _ in range(book.amount):
+                                            dec_resp = db_stub.DecrementStock(database.DecrementStockRequest(title=book.name))
+                                            if dec_resp.success:
+                                                logging.info(f"Decremented stock for {book.name}: {old_stock} -> {old_stock - book.amount}")
+                                            else:
+                                                logging.error(f"Failed to decrement stock for {book.name} (possibly out of stock)")
+                            else:
+                                logging.error("2PC failed, not processing order.")
+
+    def two_phase_commit(self, participants): # order_id,
         ready_votes = []
         for service in participants:
             try:
-                response = service.Prepare(common.PrepareRequest(order_id=order_id))
+                response = service.Prepare(common.PrepareRequest())
                 ready_votes.append(response.ready)
             except Exception as e:
-                logging.error(f"Failed to prepare order {order_id} with {service}: {e}")
+                logging.error(f"Failed to prepare order with {service}: {e}")
                 ready_votes.append(False)
         if all(ready_votes):
             for service in participants:
                 try:
-                    service.Commit(common.CommitRequest(order_id=order_id))
+                    service.Commit(common.CommitRequest())
                 except Exception as e:
-                    logging.error(f"Failed to commit order {order_id} to {service}: {e}")
+                    logging.error(f"Failed to commit order to {service}: {e}")
                     return
             print("All services committed")
+            return True
         else:
             for service in participants:
                 try:
-                    service.Abort(common.AbortRequest(order_id=order_id))
+                    service.Abort(common.AbortRequest())
                 except Exception as e:
-                    logging.error(f"Failed to abort order {order_id} with {service}: {e}")
+                    logging.error(f"Failed to abort order with {service}: {e}")
                     return
             print("Transaction aborted")
 

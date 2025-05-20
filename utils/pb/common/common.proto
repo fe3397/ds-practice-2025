@@ -5,3 +5,21 @@ package common;
 message VectorClock {
   repeated int32 clock = 1;
 }
+
+message PrepareRequest {}
+
+message PrepareResponse {
+    bool ready = 1;
+}
+
+message CommitRequest {}
+
+message CommitResponse {
+    bool success = 1;
+}
+
+message AbortRequest {}
+
+message AbortResponse {
+    bool aborted = 1;
+}

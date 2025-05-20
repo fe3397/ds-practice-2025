@@ -28,7 +28,7 @@ class OrderQueueService(order_queue_grpc.OrderQueueServicer):
         self.order_queue = []
 
     def Enqueue(self, request: order_queue.EnqueueRequest, context):
-        print("Received order data:")
+        print("Received order data:", request.order_data)
         with self._lock:
             premium_user = True #request.userdata.premium_user
             if premium_user:
@@ -37,13 +37,13 @@ class OrderQueueService(order_queue_grpc.OrderQueueServicer):
             else:
                 logging.info("Regular user detected. Adding to the end of the queue.")
                 self.order_queue.append(request)
-            logging.info(f"Order {request.id} added to the queue.")
+            logging.info(f"Order {request.order_data.id} added to the queue.")
         return order_queue.EnqueueResponse(success=True)
 
-    def Dequeue(self, request, context):
+    def Dequeue(self, request: order_queue.DequeueRequest, context):
         if self.order_queue:
             order = self.order_queue.pop()
-            logging.info(f"Order {order.id} dequeued from the queue.")
+            #logging.info(f"Order {order.id} dequeued from the queue.")
             return order
         else:
             logging.info("No orders in the queue.")

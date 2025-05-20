@@ -24,7 +24,7 @@ class PaymentService(payment_grpc.PaymentServiceServicer):
     
     def log_state(self, state):
         self.state = state
-        with open("participant_state.log", "w") as f:
+        with open("/tmp/participant_state.log", "w") as f:
             f.write(state)
     
     def recover(self):
@@ -34,7 +34,8 @@ class PaymentService(payment_grpc.PaymentServiceServicer):
         except FileNotFoundError:
             self.state = "INIT"
     
-    def prepare(self, request, context):
+    def Prepare(self, request, context):
+        print("Payment prepared")
         self.prepared = True
         self.log_state("PREPARED")
         return payment.PrepareResponse(ready=True)
