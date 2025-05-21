@@ -45,6 +45,37 @@ import payment_pb2_grpc as payment_grpc
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+from opentelemetry import metrics
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+# Service name is required for most backends
+resource = Resource.create(attributes={
+    SERVICE_NAME: "executor_service",
+})
+
+tracerProvider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="observability:3000"))
+tracerProvider.add_span_processor(processor)
+trace.set_tracer_provider(tracerProvider)
+
+reader = PeriodicExportingMetricReader(
+    OTLPMetricExporter(endpoint="localhost:3000")
+)
+meterProvider = MeterProvider(resource=resource, metric_readers=[reader])
+metrics.set_meter_provider(meterProvider)
+
+tracer = trace.get_tracer(__name__)
+
+
 class OrderExecutorService(executor_grpc.OrderExecutorServicer):
     def __init__(self):
         self._lock = threading.Lock()
@@ -106,48 +137,51 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
                 logging.critical(f"[{self.instance_id[:8]}] Leader election error: {e}")
             time.sleep(100)
 
+
     def process_order(self):
         while True:
-            time.sleep(10)
-            # Ensure only the leader can dequeue
-            if self.instance_id != self.leader_id:
-                continue
-            else: # Return an empty order
-                with grpc.insecure_channel('queue_service:50054') as channel:
-                    stub = order_queue_grpc.OrderQueueStub(channel)
-                    response = stub.Dequeue(order_queue.DequeueRequest())
-                    time.sleep(2)
-                    if response.order_data.id:
-                        with self._lock:
-                            # 1. Prepare participants for 2PC
-                            participants = []
-                            db_channel = grpc.insecure_channel('database_head:50057')
-                            db_stub = database_grpc.BooksDatabaseStub(db_channel)
-                            participants.append(db_stub)
-                            payment_channel = grpc.insecure_channel('payment:50056')
-                            payment_stub = payment_grpc.PaymentServiceStub(payment_channel)
-                            participants.append(payment_stub)
-                            # 2. Run 2PC
-                            if self.two_phase_commit(participants): #response.order_data.id, 
-                                # 3. Only do the actual decrement if 2PC succeeded
-                                for book in response.order_data.books:
-                                    print(f"Processing book: {book.name}, Amount: {book.amount}")
-                                    # Read current stock from the tail
-                                    with grpc.insecure_channel('database_tail:50057') as db_channel:
-                                        db_stub = database_grpc.BooksDatabaseStub(db_channel)
-                                        read_resp = db_stub.Read(database.ReadRequest(title=book.name))
-                                        old_stock = read_resp.stock
-                                    # Write (decrement) to the head
-                                    with grpc.insecure_channel('database_head:50057') as db_channel:
-                                        db_stub = database_grpc.BooksDatabaseStub(db_channel)
-                                        for _ in range(book.amount):
-                                            dec_resp = db_stub.DecrementStock(database.DecrementStockRequest(title=book.name))
-                                            if dec_resp.success:
-                                                logging.info(f"Decremented stock for {book.name}: {old_stock} -> {old_stock - book.amount}")
-                                            else:
-                                                logging.error(f"Failed to decrement stock for {book.name} (possibly out of stock)")
-                            else:
-                                logging.error("2PC failed, not processing order.")
+            with tracer.start_as_current_span("process_order") as span:
+                time.sleep(10)
+                # Ensure only the leader can dequeue
+                if self.instance_id != self.leader_id:
+                    continue
+                else: # Return an empty order
+                    with grpc.insecure_channel('queue_service:50054') as channel:
+                        stub = order_queue_grpc.OrderQueueStub(channel)
+                        response = stub.Dequeue(order_queue.DequeueRequest())
+                        span.set_attribute("order.id", getattr(response.order_data, "id", "none"))
+                        time.sleep(2)
+                        if response.order_data.id:
+                            with self._lock:
+                                # 1. Prepare participants for 2PC
+                                participants = []
+                                db_channel = grpc.insecure_channel('database_head:50057')
+                                db_stub = database_grpc.BooksDatabaseStub(db_channel)
+                                participants.append(db_stub)
+                                payment_channel = grpc.insecure_channel('payment:50056')
+                                payment_stub = payment_grpc.PaymentServiceStub(payment_channel)
+                                participants.append(payment_stub)
+                                # 2. Run 2PC
+                                if self.two_phase_commit(participants): #response.order_data.id, 
+                                    # 3. Only do the actual decrement if 2PC succeeded
+                                    for book in response.order_data.books:
+                                        print(f"Processing book: {book.name}, Amount: {book.amount}")
+                                        # Read current stock from the tail
+                                        with grpc.insecure_channel('database_tail:50057') as db_channel:
+                                            db_stub = database_grpc.BooksDatabaseStub(db_channel)
+                                            read_resp = db_stub.Read(database.ReadRequest(title=book.name))
+                                            old_stock = read_resp.stock
+                                        # Write (decrement) to the head
+                                        with grpc.insecure_channel('database_head:50057') as db_channel:
+                                            db_stub = database_grpc.BooksDatabaseStub(db_channel)
+                                            for _ in range(book.amount):
+                                                dec_resp = db_stub.DecrementStock(database.DecrementStockRequest(title=book.name))
+                                                if dec_resp.success:
+                                                    logging.info(f"Decremented stock for {book.name}: {old_stock} -> {old_stock - book.amount}")
+                                                else:
+                                                    logging.error(f"Failed to decrement stock for {book.name} (possibly out of stock)")
+                                else:
+                                    logging.error("2PC failed, not processing order.")
 
     def two_phase_commit(self, participants): # order_id,
         ready_votes = []
