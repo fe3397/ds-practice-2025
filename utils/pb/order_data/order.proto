@@ -4,7 +4,7 @@ package order;
 import "common.proto";
 
 service OrderQueue {
-    rpc Enqueue (OrderData) returns (EnqueueResponse);
+    rpc Enqueue (EnqueueRequest) returns (EnqueueResponse);
 
     rpc Dequeue (DequeueRequest) returns (DequeueResponse);
 }
