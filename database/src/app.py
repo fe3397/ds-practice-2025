@@ -14,7 +14,7 @@ from concurrent import futures
 
 class BooksDatabaseService(database_grpc.BooksDatabaseServicer):
     def __init__(self):
-        self.store = {"Book A": 1, "Book B": 2}
+        self.store = {"Book A": 100, "Book B": 100}
         self.recover()
         self.instance_id = os.environ.get("INSTANCE_ID", socket.gethostname())  # Unique ID for this instance
 

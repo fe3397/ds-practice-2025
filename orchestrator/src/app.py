@@ -171,7 +171,7 @@ def index():
     Responds with 'Hello, [name]' when a GET request is made to '/' endpoint.
     """
     # Test the fraud-detection gRPC service.
-    response = "greet(name='orchestrator')"
+    response = "Hello!"
     # request_data = json.loads(request.data)
     # response = checkFraud(fraud_detection.FraudRequest(user=request_data.user, cc=request_data.creditCard))
     # Return the response.
@@ -194,9 +194,11 @@ def checkout():
     logging.info(f"Order suggestion init {init_sugg}")
 
     response_verify = verify(order_data.id, [0, 0, 0])
+    logging.info(response_verify[0])
     logging.info(f"Verification vector clock: {response_verify[1].clock}")
 
     response_fraud = checkFraud(order_data.id, list(response_verify[1].clock))
+    logging.info(f"fraud {response_fraud[0]}")
     logging.info(f"Fraud detection vector clock: {response_fraud[1].clock}")
 
     response_sugg = suggest(order_data.id, list(response_fraud[1].clock))
@@ -204,7 +206,7 @@ def checkout():
 
 
 
-    if response_verify and response_fraud and response_sugg:
+    if response_verify[0] == response_fraud[0] == "OK":
         enqueue_response = enqueue_order(order_data)
         print("Enqueue Response:", enqueue_response)
 
