@@ -115,7 +115,7 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
             # Check if the user is in the userDB
             if user_data.name in self.userDB:
                 # print(f"User {user_data.name} found in userDB, comparing credit card data...")
-                response.fraud = "FAIL"
+                response.fraud = "OK"
             # else:
                 # Ask Chatgpt if the user is a fraud
                 # print(f"User not found in userDB, screening with AI...")
@@ -143,11 +143,11 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
         user_data_fraud = check_user_data_fraud()
 
         if card_fraud and user_data_fraud:
-            response.fraud = "OK"
+            response.fraud = "FAIL"
             response.vector_clock.clock[:] = vector
             return response
         else:
-            response.fraud = "FAIL"
+            response.fraud = "OK"
             response.vector_clock.clock[:] = vector
             return response
         # Return the response object
