@@ -129,7 +129,6 @@ services:
     build:
       context: ./
       dockerfile: ./executor_service/Dockerfile
-
     environment:
       - PYTHONUNBUFFERED=TRUE
       - PYTHONFILE=/app/order_executor/src/app.py
@@ -238,7 +237,9 @@ services:
       ports:
         - "3000:3000"
         - "4317:4317"
-        - "4318:4318"
+        #- "4318:4318"
         - "3200:3200"
+        #- "8888:8888"
+        - "9090:9090"
       environment:
         - OTEL_METRIC_EXPORT_INTERVAL=1000

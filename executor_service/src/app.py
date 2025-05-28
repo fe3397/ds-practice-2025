@@ -63,18 +63,42 @@ resource = Resource.create(attributes={
 })
 
 tracerProvider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="observability:3000"))
+processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="http://observability:4317", insecure=True))
 tracerProvider.add_span_processor(processor)
 trace.set_tracer_provider(tracerProvider)
 
 reader = PeriodicExportingMetricReader(
-    OTLPMetricExporter(endpoint="localhost:3000")
+    OTLPMetricExporter(endpoint="http://observability:4317", insecure=True)
 )
 meterProvider = MeterProvider(resource=resource, metric_readers=[reader])
 metrics.set_meter_provider(meterProvider)
 
 tracer = trace.get_tracer(__name__)
+meter = metrics.get_meter(__name__)
 
+order_counter = meter.create_counter(
+    "order_counter",
+    description="Counts the number of orders processed",
+    unit="orders"
+)
+
+stock_updown = meter.create_counter(
+    "stock_level",
+    description="Current stock level after processing orders"
+)
+
+import time
+order_latency = meter.create_histogram(
+    "order_latency",
+    description="Latency of order processing",
+    unit="milliseconds"
+)
+
+election_latency = meter.create_histogram(
+    "election_latency",
+    description="Latency of leader election",
+    unit="milliseconds"
+)
 
 class OrderExecutorService(executor_grpc.OrderExecutorServicer):
     def __init__(self):
@@ -117,6 +141,7 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
 
     def run_leader_election(self):
         while True:
+            start_time = time.time()
             try:
                 highest_id = self.instance_id
                 for peer in self.peers:
@@ -130,6 +155,7 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
                     self.leader_id = highest_id
                     if self.leader_id == self.instance_id:
                         logging.warning(f"[{self.instance_id[:8]}] I am the LEADER.")
+                        election_latency.record((time.time() - start_time) * 1000, {"instance_id": self.instance_id})
                     # else:
                     #     logging.warning(f"[{self.instance_id[:8]}] Current leader is {self.leader_id[:8]}")
 
@@ -140,6 +166,7 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
 
     def process_order(self):
         while True:
+            start = time.time()
             with tracer.start_as_current_span("process_order") as span:
                 time.sleep(10)
                 # Ensure only the leader can dequeue
@@ -161,9 +188,12 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
                                 payment_channel = grpc.insecure_channel('payment:50056')
                                 payment_stub = payment_grpc.PaymentServiceStub(payment_channel)
                                 participants.append(payment_stub)
+                                span.set_attribute("order.books", [book.name for book in response.order_data.books])
+                                order_counter.add(1, {"order_id": response.order_data.id})
                                 # 2. Run 2PC
                                 if self.two_phase_commit(participants): #response.order_data.id, 
                                     # 3. Only do the actual decrement if 2PC succeeded
+                                    span.set_attribute("order.status", "committed")
                                     for book in response.order_data.books:
                                         print(f"Processing book: {book.name}, Amount: {book.amount}")
                                         # Read current stock from the tail
@@ -171,13 +201,16 @@ class OrderExecutorService(executor_grpc.OrderExecutorServicer):
                                             db_stub = database_grpc.BooksDatabaseStub(db_channel)
                                             read_resp = db_stub.Read(database.ReadRequest(title=book.name))
                                             old_stock = read_resp.stock
+                                            span.set_attribute(f"book.{book.name}.stock", old_stock)
                                         # Write (decrement) to the head
                                         with grpc.insecure_channel('database_head:50057') as db_channel:
                                             db_stub = database_grpc.BooksDatabaseStub(db_channel)
                                             for _ in range(book.amount):
                                                 dec_resp = db_stub.DecrementStock(database.DecrementStockRequest(title=book.name))
+                                                span.set_attribute(f"book.{book.name}.decremented", dec_resp.success)
                                                 if dec_resp.success:
                                                     logging.info(f"Decremented stock for {book.name}: {old_stock} -> {old_stock - book.amount}")
+                                                    order_latency.record((time.time() - start) * 1000, {"order_id": response.order_data.id})
                                                 else:
                                                     logging.error(f"Failed to decrement stock for {book.name} (possibly out of stock)")
                                 else:

@@ -12,6 +12,35 @@ import database_pb2_grpc as database_grpc
 import grpc
 from concurrent import futures
 
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+
+from opentelemetry import metrics
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+resource = Resource.create(attributes={
+    SERVICE_NAME: "database_service",
+})
+
+reader = PeriodicExportingMetricReader(
+    OTLPMetricExporter(endpoint="http://observability:4317", insecure=True)
+)
+meterProvider = MeterProvider(resource=resource, metric_readers=[reader])
+metrics.set_meter_provider(meterProvider)
+
+
+meter = metrics.get_meter(__name__)
+decrement_counter = meter.create_counter(
+    "db_decrement_counter",
+    description="Number of successful stock decrements"
+)
+
+increment_counter = meter.create_counter(
+    "db_increment_counter",
+    description="Number of successful stock increments"
+)
+
 class BooksDatabaseService(database_grpc.BooksDatabaseServicer):
     def __init__(self):
         self.store = {"Book A": 1, "Book B": 2}
@@ -102,6 +131,8 @@ class ChainReplica(BooksDatabaseService):
     def DecrementStock(self, request, context):
         if request.title in self.store and self.store[request.title] > 0:
             self.store[request.title] -= 1
+            decrement_counter.add(1, {"book": request.title})
+            
             # Propagate to successor
             if self.successor_stub:
                 response = self.successor_stub.DecrementStock(request)
@@ -115,6 +146,7 @@ class ChainReplica(BooksDatabaseService):
     def IncrementStock(self, request, context):
         if request.title in self.store:
             self.store[request.title] += 1
+            increment_counter.add(1, {"book": request.title})
         else:
             self.store[request.title] = 1
         # Propagate to successor
