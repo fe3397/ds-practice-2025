@@ -58,4 +58,5 @@ Diagrams
 
 ![distributed_commit](https://github.com/user-attachments/assets/e3e11ce3-2e04-4100-a7e5-38774e261943)
 
+![book_system](https://github.com/user-attachments/assets/c87754f8-03c3-44cd-a0e5-068a67f3f91f)
 
